@@ -1,0 +1,149 @@
+<!DOCTYPE html><html><head><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <title>Проверка API Hugging Face</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin: 20px 0;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .success {
+            color: green;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Проверка API Hugging Face</h2>
+        
+        <div class="input-group">
+            <label for="apiKey">API Ключ:</label>
+            <input type="text" id="apiKey" value="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">
+        </div>
+
+        <button onclick="checkApiKey()" class="button">Проверить API ключ</button>
+        <button onclick="testModel()" class="button">Тест модели</button>
+
+        <div class="response" id="response">Ожидание действий...</div>
+        <div class="error" id="error"></div>
+        <div class="success" id="success"></div>
+    </div>
+
+    <script>
+        const response = document.getElementById('response');
+        const error = document.getElementById('error');
+        const success = document.getElementById('success');
+
+        async function checkApiKey() {
+            clearMessages();
+            const apiKey = document.getElementById('apiKey').value;
+            response.textContent = 'Проверка API ключа...';
+
+            try {
+                const result = await fetch('https://api-inference.huggingface.co/models', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`
+                    }
+                });
+
+                if (result.ok) {
+                    const data = await result.json();
+                    success.textContent = 'API ключ работает корректно!';
+                    response.textContent = 'Доступные модели: ' + JSON.stringify(data, null, 2);
+                } else {
+                    throw new Error(`Статус ответа: ${result.status}`);
+                }
+            } catch (err) {
+                error.textContent = `Ошибка при проверке API ключа: ${err.message}`;
+                response.textContent = 'Проверка не удалась';
+            }
+        }
+
+        async function testModel() {
+            clearMessages();
+            const apiKey = document.getElementById('apiKey').value;
+            response.textContent = 'Тестирование модели...';
+
+            try {
+                const result = await fetch('https://api-inference.huggingface.co/models/gpt2', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        'inputs': 'Hello, how are you?',
+                        'parameters': {
+                            'max_length': 50,
+                            'temperature': 0.7
+                        }
+                    })
+                });
+
+                if (result.ok) {
+                    const data = await result.json();
+                    success.textContent = 'Тест модели успешен!';
+                    response.textContent = 'Ответ модели: ' + JSON.stringify(data, null, 2);
+                } else {
+                    const errorData = await result.text();
+                    throw new Error(`Статус: ${result.status}, Ответ: ${errorData}`);
+                }
+            } catch (err) {
+                error.textContent = `Ошибка при тестировании модели: ${err.message}`;
+                response.textContent = 'Тест не удался';
+            }
+        }
+
+        function clearMessages() {
+            error.textContent = '';
+            success.textContent = '';
+            response.textContent = 'Обработка...';
+        }
+    </script>
+
+
+</body></html>
